@@ -1,0 +1,40 @@
+Mustache gives you a great way to generate HTML, this wraps that up in a Servlet so
+you can do it quite easily. Here is an example:
+
+Backing code (Index.java):
+
+package mustachelets;
+
+import mustachelet.annotations.Exists;
+import mustachelet.annotations.Path;
+import mustachelet.annotations.Template;
+
+/**
+ * Index page.
+ * <p/>
+ * User: sam
+ * Date: 12/21/10
+ * Time: 2:22 PM
+ */
+@Path("/")
+@Template("index.html")
+public class Index {
+  @Exists
+  boolean exists() {
+    return true;
+  }
+
+  String name() {
+    return "Sam";
+  }
+}
+
+Template code (index.html):
+<html>
+<head>
+<title>Index</title>
+</head>
+<body>
+Hello, {{name}}!
+</body>
+</html>

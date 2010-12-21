@@ -91,6 +91,7 @@ public class MustacheletServlet extends HttpServlet {
 
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    resp.setHeader("Server", "Mustachelet 0.1");
     Pusher<RequestB> requestPusher = PusherBase.create(RequestB.class, RequestP.class);
     requestPusher.bindInstance(RequestB.REQUEST, req);
 
