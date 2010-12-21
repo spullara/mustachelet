@@ -9,5 +9,6 @@ package mustachelet.pusher;
  */
 public enum RequestB {
   REQUEST, // HttpServletRequest
+  RESPONSE, // HttpServletResponse
   MATCHER, // Matcher
 }

@@ -5,7 +5,8 @@ import com.sampullara.mustache.MustacheCompiler;
 import com.sampullara.mustache.MustacheException;
 import com.sampullara.mustache.Scope;
 import com.sampullara.util.FutureWriter;
-import mustachelet.annotations.Exists;
+import mustachelet.annotations.Controller;
+import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
 import mustachelet.pusher.ConfigB;
@@ -60,8 +61,17 @@ public class MustacheletServlet extends HttpServlet {
       if (template == null) {
         throw new ServletException("You must specify a template on: " + mustachelet.getCanonicalName());
       }
+      HttpMethod httpMethod = mustachelet.getAnnotation(HttpMethod.class);
       String regex = annotation.value();
-      Class put = pathMap.put(Pattern.compile(regex), mustachelet);
+      Map<HttpMethod.Type, Class> methodClassMap = new HashMap<HttpMethod.Type, Class>();
+      if (httpMethod == null) {
+        methodClassMap.put(HttpMethod.Type.GET, mustachelet);
+      } else {
+        for (HttpMethod.Type type : httpMethod.value()) {
+          methodClassMap.put(type, mustachelet);
+        }
+      }
+      Map<HttpMethod.Type, Class> put = pathMap.put(Pattern.compile(regex), methodClassMap);
       if (put != null) {
         throw new ServletException("Duplicate path: " + mustachelet + " and " + put);
       }
@@ -76,43 +86,52 @@ public class MustacheletServlet extends HttpServlet {
         throw new ServletException("Failed to compile template: " + template.value(), e);
       }
       for (Method method : mustachelet.getDeclaredMethods()) {
-        if (method.getAnnotation(Exists.class) != null) {
+        if (method.getAnnotation(Controller.class) != null) {
           method.setAccessible(true);
-          existsMap.put(mustachelet, method);
+          controllerMap.put(mustachelet, method);
           break;
         }
       }
     }
   }
 
-  private Map<Pattern, Class> pathMap = new HashMap<Pattern, Class>();
+  private Map<Pattern, Map<HttpMethod.Type, Class>> pathMap = new HashMap<Pattern, Map<HttpMethod.Type, Class>>();
   private Map<Class, Mustache> mustacheMap = new HashMap<Class, Mustache>();
-  private Map<Class, Method> existsMap = new HashMap<Class, Method>();
+  private Map<Class, Method> controllerMap = new HashMap<Class, Method>();
 
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    resp.setHeader("Server", "Mustachelet 0.1");
+    resp.setHeader("Server", "Mustachelet/0.1");
+    resp.setContentType("text/html");
+    resp.setCharacterEncoding("UTF-8");
     Pusher<RequestB> requestPusher = PusherBase.create(RequestB.class, RequestP.class);
     requestPusher.bindInstance(RequestB.REQUEST, req);
+    requestPusher.bindInstance(RequestB.RESPONSE, resp);
 
     String requestURI = req.getRequestURI();
     if (requestURI == null || requestURI.equals("")) {
       requestURI = "/";
     }
-    for (Map.Entry<Pattern, Class> entry : pathMap.entrySet()) {
+    for (Map.Entry<Pattern, Map<HttpMethod.Type, Class>> entry : pathMap.entrySet()) {
       Matcher matcher = entry.getKey().matcher(requestURI);
       if (matcher.matches()) {
         requestPusher.bindInstance(RequestB.MATCHER, matcher);
-        Class mustachelet = entry.getValue();
+        Map<HttpMethod.Type, Class> methodClassMap = entry.getValue();
+        String httpMethod = req.getMethod();
+        boolean head;
+        if (httpMethod.equals("HEAD")) {
+          head = true;
+          httpMethod = "GET";
+        } else head = false;
+        Class mustachelet = methodClassMap.get(HttpMethod.Type.valueOf(httpMethod));
         Object o = mustacheletPusher.create(mustachelet);
         requestPusher.push(o);
-        Method method = existsMap.get(mustachelet);
+        Method method = controllerMap.get(mustachelet);
         if (method != null) {
           Object invoke;
           try {
             invoke = method.invoke(o);
             if (invoke instanceof Boolean && !((Boolean)invoke)) {
-              resp.setStatus(404);
               return;
             }
           } catch (Exception e) {
@@ -120,6 +139,10 @@ public class MustacheletServlet extends HttpServlet {
             resp.setStatus(500);
             return;
           }
+        }
+        if (head) {
+          resp.setStatus(200);
+          return;
         }
         Mustache mustache = mustacheMap.get(mustachelet);
         FutureWriter fw = new FutureWriter(resp.getWriter());

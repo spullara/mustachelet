@@ -13,10 +13,6 @@ import java.lang.annotation.Target;
  * Time: 2:24 PM
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-public @interface Method {
-  enum Type {
-    GET, POST
-  }
-  Type[] value();
+@Target(ElementType.METHOD)
+public @interface Controller {
 }

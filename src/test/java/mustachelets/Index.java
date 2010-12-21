@@ -1,6 +1,7 @@
 package mustachelets;
 
-import mustachelet.annotations.Exists;
+import mustachelet.annotations.Controller;
+import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
 
@@ -13,8 +14,9 @@ import mustachelet.annotations.Template;
  */
 @Path("/")
 @Template("index.html")
+@HttpMethod(HttpMethod.Type.GET)
 public class Index {
-  @Exists
+  @Controller
   boolean exists() {
     return true;
   }
