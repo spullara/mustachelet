@@ -1,7 +1,6 @@
 package mustachelets;
 
 import mustachelet.annotations.Controller;
-import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
 
