@@ -18,5 +18,5 @@ public @interface HttpMethod {
   enum Type {
     GET, POST
   }
-  Type[] value();
+  Type[] value() default Type.GET;
 }

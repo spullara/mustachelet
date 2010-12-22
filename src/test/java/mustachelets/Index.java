@@ -14,7 +14,6 @@ import mustachelet.annotations.Template;
  */
 @Path("/")
 @Template("index.html")
-@HttpMethod(HttpMethod.Type.GET)
 public class Index {
   @Controller
   boolean exists() {

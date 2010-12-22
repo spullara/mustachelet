@@ -86,9 +86,17 @@ public class MustacheletServlet extends HttpServlet {
         throw new ServletException("Failed to compile template: " + template.value(), e);
       }
       for (Method method : mustachelet.getDeclaredMethods()) {
-        if (method.getAnnotation(Controller.class) != null) {
+        Controller controller = method.getAnnotation(Controller.class);
+        if (controller != null) {
           method.setAccessible(true);
-          controllerMap.put(mustachelet, method);
+          Map<HttpMethod.Type, Method> typeMethodMap = controllerMap.get(mustachelet);
+          if (typeMethodMap == null) {
+            typeMethodMap = new HashMap<HttpMethod.Type, Method>();
+            controllerMap.put(mustachelet, typeMethodMap);
+          }
+          for (HttpMethod.Type type : controller.value()) {
+            typeMethodMap.put(type, method);
+          }
           break;
         }
       }
@@ -97,7 +105,7 @@ public class MustacheletServlet extends HttpServlet {
 
   private Map<Pattern, Map<HttpMethod.Type, Class>> pathMap = new HashMap<Pattern, Map<HttpMethod.Type, Class>>();
   private Map<Class, Mustache> mustacheMap = new HashMap<Class, Mustache>();
-  private Map<Class, Method> controllerMap = new HashMap<Class, Method>();
+  private Map<Class, Map<HttpMethod.Type, Method>> controllerMap = new HashMap<Class, Map<HttpMethod.Type, Method>>();
 
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -128,18 +136,21 @@ public class MustacheletServlet extends HttpServlet {
         Class mustachelet = methodClassMap.get(type);
         Object o = mustacheletPusher.create(mustachelet);
         requestPusher.push(o);
-        Method method = controllerMap.get(mustachelet);
-        if (method != null) {
-          Object invoke;
-          try {
-            invoke = method.invoke(o);
-            if (invoke instanceof Boolean && !((Boolean)invoke)) {
+        Map<HttpMethod.Type, Method> typeMethodMap = controllerMap.get(mustachelet);
+        if (typeMethodMap != null) {
+          Method method = typeMethodMap.get(type);
+          if (method != null) {
+            Object invoke;
+            try {
+              invoke = method.invoke(o);
+              if (invoke instanceof Boolean && !((Boolean)invoke)) {
+                return;
+              }
+            } catch (Exception e) {
+              e.printStackTrace();
+              resp.setStatus(500);
               return;
             }
-          } catch (Exception e) {
-            e.printStackTrace();
-            resp.setStatus(500);
-            return;
           }
         }
         if (head) {
@@ -159,5 +170,6 @@ public class MustacheletServlet extends HttpServlet {
         }
       }
     }
+    resp.setStatus(404);
   }
 }

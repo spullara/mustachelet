@@ -23,26 +23,20 @@ import java.util.regex.Matcher;
 @Template("post.html")
 @HttpMethod({HttpMethod.Type.GET, HttpMethod.Type.POST})
 public class Post {
-  @RequestP(RequestB.HTTP_METHOD)
-  HttpMethod.Type method;
-
   @RequestP(RequestB.RESPONSE)
   HttpServletResponse response;
 
   @RequestP(RequestB.REQUEST)
   HttpServletRequest request;
 
+  @Controller(HttpMethod.Type.POST)
+  boolean post() throws IOException {
+    response.sendRedirect("/post/" + request.getParameter("value"));
+    return false;
+  }
+
   @RequestP(RequestB.MATCHER)
   Matcher m;
-
-  @Controller
-  boolean post() throws IOException {
-    if (method == HttpMethod.Type.POST) {
-      response.sendRedirect("/post/" + request.getParameter("value"));
-      return false;
-    }
-    return true;
-  }
 
   String value() {
     return m.group(2);
