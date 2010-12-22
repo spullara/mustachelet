@@ -123,7 +123,9 @@ public class MustacheletServlet extends HttpServlet {
           head = true;
           httpMethod = "GET";
         } else head = false;
-        Class mustachelet = methodClassMap.get(HttpMethod.Type.valueOf(httpMethod));
+        HttpMethod.Type type = HttpMethod.Type.valueOf(httpMethod);
+        requestPusher.bindInstance(RequestB.HTTP_METHOD, type);
+        Class mustachelet = methodClassMap.get(type);
         Object o = mustacheletPusher.create(mustachelet);
         requestPusher.push(o);
         Method method = controllerMap.get(mustachelet);

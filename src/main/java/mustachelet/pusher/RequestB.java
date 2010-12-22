@@ -11,4 +11,5 @@ public enum RequestB {
   REQUEST, // HttpServletRequest
   RESPONSE, // HttpServletResponse
   MATCHER, // Matcher
+  HTTP_METHOD, // Http Method, HttpMethod.Type.*
 }

@@ -6,6 +6,7 @@ import mustachelet.pusher.ConfigP;
 import mustachelet.pusher.PTest;
 import mustachelet.pusher.TestPush;
 import mustachelets.Index;
+import mustachelets.Post;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -32,7 +33,7 @@ public class MustacheletTestServer {
 
     Pusher<ConfigB> pusher = PusherBase.create(ConfigB.class, ConfigP.class);
     File root = new File("src/test/resources");
-    pusher.bindInstance(ConfigB.MUSTACHELETS, Lists.newArrayList(Index.class));
+    pusher.bindInstance(ConfigB.MUSTACHELETS, Lists.newArrayList(Index.class, Post.class));
     pusher.bindInstance(ConfigB.MUSTACHE_ROOT, root);
     pusher.bindInstance(ConfigB.PUSHER, PusherBase.create(PTest.class, TestPush.class));
 
