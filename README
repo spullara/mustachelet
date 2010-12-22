@@ -5,7 +5,7 @@ Backing code (Index.java):
 
 package mustachelets;
 
-import mustachelet.annotations.Exists;
+import mustachelet.annotations.Controller;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
 
