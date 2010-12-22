@@ -16,7 +16,12 @@ import mustachelet.pusher.RequestP;
 import thepusher.Pusher;
 import thepusher.PusherBase;
 
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -38,7 +43,7 @@ import java.util.regex.Pattern;
  * Date: 12/21/10
  * Time: 2:13 PM
  */
-public class MustacheletServlet extends HttpServlet {
+public class MustacheletService extends HttpServlet implements Filter {
 
   @ConfigP(ConfigB.PUSHER)
   Pusher mustacheletPusher;
@@ -49,7 +54,93 @@ public class MustacheletServlet extends HttpServlet {
   @ConfigP(ConfigB.MUSTACHE_ROOT)
   File root;
 
+  private Map<Pattern, Map<HttpMethod.Type, Class>> pathMap = new HashMap<Pattern, Map<HttpMethod.Type, Class>>();
+  private Map<Class, Mustache> mustacheMap = new HashMap<Class, Mustache>();
+  private Map<Class, Map<HttpMethod.Type, Method>> controllerMap = new HashMap<Class, Map<HttpMethod.Type, Method>>();
+
   @Override
+  protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    if (execute(resp, req)) return;
+    resp.sendError(404, "Not found");
+  }
+
+  public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    HttpServletResponse resp = (HttpServletResponse) response;
+    HttpServletRequest req = (HttpServletRequest) request;
+    if (execute(resp, req)) return;
+    chain.doFilter(request, response);
+  }
+
+  private boolean execute(HttpServletResponse resp, HttpServletRequest req) throws IOException {
+    resp.setHeader("Server", "Mustachelet/0.1");
+    resp.setContentType("text/html");
+    resp.setCharacterEncoding("UTF-8");
+    Pusher<RequestB> requestPusher = PusherBase.create(RequestB.class, RequestP.class);
+    requestPusher.bindInstance(RequestB.REQUEST, req);
+    requestPusher.bindInstance(RequestB.RESPONSE, resp);
+
+    String requestURI = req.getRequestURI();
+    if (requestURI == null || requestURI.equals("")) {
+      requestURI = "/";
+    }
+    for (Map.Entry<Pattern, Map<HttpMethod.Type, Class>> entry : pathMap.entrySet()) {
+      Matcher matcher = entry.getKey().matcher(requestURI);
+      if (matcher.matches()) {
+        requestPusher.bindInstance(RequestB.MATCHER, matcher);
+        Map<HttpMethod.Type, Class> methodClassMap = entry.getValue();
+        String httpMethod = req.getMethod();
+        boolean head;
+        if (httpMethod.equals("HEAD")) {
+          head = true;
+          httpMethod = "GET";
+        } else head = false;
+        HttpMethod.Type type = HttpMethod.Type.valueOf(httpMethod);
+        requestPusher.bindInstance(RequestB.HTTP_METHOD, type);
+        Class mustachelet = methodClassMap.get(type);
+        Object o = mustacheletPusher.create(mustachelet);
+        requestPusher.push(o);
+        Map<HttpMethod.Type, Method> typeMethodMap = controllerMap.get(mustachelet);
+        if (typeMethodMap != null) {
+          Method method = typeMethodMap.get(type);
+          if (method != null) {
+            Object invoke;
+            try {
+              invoke = method.invoke(o);
+              if (invoke instanceof Boolean && !((Boolean)invoke)) {
+                return true;
+              }
+            } catch (Exception e) {
+              e.printStackTrace();
+              resp.setStatus(500);
+              return true;
+            }
+          }
+        }
+        if (head) {
+          resp.setStatus(200);
+          return true;
+        }
+        Mustache mustache = mustacheMap.get(mustachelet);
+        FutureWriter fw = new FutureWriter(resp.getWriter());
+        try {
+          mustache.execute(fw, new Scope(o));
+          resp.setStatus(200);
+          fw.flush();
+          return true;
+        } catch (MustacheException e) {
+          resp.setStatus(500);
+          e.printStackTrace();
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  public void init(FilterConfig filterConfig) throws ServletException {
+    init();
+  }
+
   public void init() throws ServletException {
     MustacheCompiler mc = new MustacheCompiler(root);
     for (Class<?> mustachelet : mustachelets) {
@@ -103,73 +194,6 @@ public class MustacheletServlet extends HttpServlet {
     }
   }
 
-  private Map<Pattern, Map<HttpMethod.Type, Class>> pathMap = new HashMap<Pattern, Map<HttpMethod.Type, Class>>();
-  private Map<Class, Mustache> mustacheMap = new HashMap<Class, Mustache>();
-  private Map<Class, Map<HttpMethod.Type, Method>> controllerMap = new HashMap<Class, Map<HttpMethod.Type, Method>>();
-
-  @Override
-  protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-    resp.setHeader("Server", "Mustachelet/0.1");
-    resp.setContentType("text/html");
-    resp.setCharacterEncoding("UTF-8");
-    Pusher<RequestB> requestPusher = PusherBase.create(RequestB.class, RequestP.class);
-    requestPusher.bindInstance(RequestB.REQUEST, req);
-    requestPusher.bindInstance(RequestB.RESPONSE, resp);
-
-    String requestURI = req.getRequestURI();
-    if (requestURI == null || requestURI.equals("")) {
-      requestURI = "/";
-    }
-    for (Map.Entry<Pattern, Map<HttpMethod.Type, Class>> entry : pathMap.entrySet()) {
-      Matcher matcher = entry.getKey().matcher(requestURI);
-      if (matcher.matches()) {
-        requestPusher.bindInstance(RequestB.MATCHER, matcher);
-        Map<HttpMethod.Type, Class> methodClassMap = entry.getValue();
-        String httpMethod = req.getMethod();
-        boolean head;
-        if (httpMethod.equals("HEAD")) {
-          head = true;
-          httpMethod = "GET";
-        } else head = false;
-        HttpMethod.Type type = HttpMethod.Type.valueOf(httpMethod);
-        requestPusher.bindInstance(RequestB.HTTP_METHOD, type);
-        Class mustachelet = methodClassMap.get(type);
-        Object o = mustacheletPusher.create(mustachelet);
-        requestPusher.push(o);
-        Map<HttpMethod.Type, Method> typeMethodMap = controllerMap.get(mustachelet);
-        if (typeMethodMap != null) {
-          Method method = typeMethodMap.get(type);
-          if (method != null) {
-            Object invoke;
-            try {
-              invoke = method.invoke(o);
-              if (invoke instanceof Boolean && !((Boolean)invoke)) {
-                return;
-              }
-            } catch (Exception e) {
-              e.printStackTrace();
-              resp.setStatus(500);
-              return;
-            }
-          }
-        }
-        if (head) {
-          resp.setStatus(200);
-          return;
-        }
-        Mustache mustache = mustacheMap.get(mustachelet);
-        FutureWriter fw = new FutureWriter(resp.getWriter());
-        try {
-          mustache.execute(fw, new Scope(o));
-          resp.setStatus(200);
-          fw.flush();
-        } catch (MustacheException e) {
-          resp.setStatus(500);
-          e.printStackTrace();
-          return;
-        }
-      }
-    }
-    resp.setStatus(404);
+  public void destroy() {
   }
 }

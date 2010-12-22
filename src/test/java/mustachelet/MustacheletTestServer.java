@@ -9,7 +9,9 @@ import mustachelets.Index;
 import mustachelets.Post;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import thepusher.Pusher;
 import thepusher.PusherBase;
@@ -38,7 +40,7 @@ public class MustacheletTestServer {
     pusher.bindInstance(ConfigB.PUSHER, PusherBase.create(PTest.class, TestPush.class));
 
     final ServletContextHandler mainHandler = new ServletContextHandler(contexts, "/", true, false);
-    mainHandler.addServlet(new ServletHolder(pusher.create(MustacheletServlet.class)), "/");
+    mainHandler.addServlet(new ServletHolder(pusher.create(MustacheletService.class)), "/");
     server.start();
   }
 }
