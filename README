@@ -19,7 +19,7 @@ import mustachelet.annotations.Template;
 @Path("/")
 @Template("index.html")
 public class Index {
-  @Exists
+  @Controller
   boolean exists() {
     return true;
   }
