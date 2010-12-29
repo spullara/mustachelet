@@ -39,7 +39,7 @@ public class Post {
   HttpServletRequest request;
 
   @Controller(POST)
-  boolean post() throws IOException {
+  boolean redirectPostData() throws IOException {
     response.sendRedirect("/post/" + request.getParameter("value"));
     return false;
   }
