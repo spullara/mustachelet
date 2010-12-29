@@ -48,7 +48,7 @@ import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
 import mustachelet.pusher.RequestB;
-import mustachelet.pusher.RequestP;
+import mustachelet.pusher.Request;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

@@ -9,10 +9,8 @@ import mustachelet.annotations.Controller;
 import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
-import mustachelet.pusher.ConfigB;
-import mustachelet.pusher.ConfigP;
-import mustachelet.pusher.RequestB;
-import mustachelet.pusher.RequestP;
+import mustachelet.pusher.Config;
+import mustachelet.pusher.Request;
 import thepusher.Pusher;
 import thepusher.PusherBase;
 
@@ -36,6 +34,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static mustachelet.pusher.Config.B.*;
+import static mustachelet.pusher.Request.B.*;
+
 /**
  * This servlet handles serving Mustachelets.
  * <p/>
@@ -45,13 +46,13 @@ import java.util.regex.Pattern;
  */
 public class MustacheletService extends HttpServlet implements Filter {
 
-  @ConfigP(ConfigB.PUSHER)
+  @Config(PUSHER)
   Pusher mustacheletPusher;
 
-  @ConfigP(ConfigB.MUSTACHELETS)
+  @Config(MUSTACHELETS)
   List<Class> mustachelets;
 
-  @ConfigP(ConfigB.MUSTACHE_ROOT)
+  @Config(MUSTACHE_ROOT)
   File root;
 
   private Map<Pattern, Map<HttpMethod.Type, Class>> pathMap = new HashMap<Pattern, Map<HttpMethod.Type, Class>>();
@@ -75,9 +76,9 @@ public class MustacheletService extends HttpServlet implements Filter {
     resp.setHeader("Server", "Mustachelet/0.1");
     resp.setContentType("text/html");
     resp.setCharacterEncoding("UTF-8");
-    Pusher<RequestB> requestPusher = PusherBase.create(RequestB.class, RequestP.class);
-    requestPusher.bindInstance(RequestB.REQUEST, req);
-    requestPusher.bindInstance(RequestB.RESPONSE, resp);
+    Pusher<Request.B> requestPusher = PusherBase.create(Request.B.class, Request.class);
+    requestPusher.bindInstance(REQUEST, req);
+    requestPusher.bindInstance(RESPONSE, resp);
 
     String requestURI = req.getRequestURI();
     if (requestURI == null || requestURI.equals("")) {
@@ -86,7 +87,7 @@ public class MustacheletService extends HttpServlet implements Filter {
     for (Map.Entry<Pattern, Map<HttpMethod.Type, Class>> entry : pathMap.entrySet()) {
       Matcher matcher = entry.getKey().matcher(requestURI);
       if (matcher.matches()) {
-        requestPusher.bindInstance(RequestB.MATCHER, matcher);
+        requestPusher.bindInstance(Request.B.MATCHER, matcher);
         Map<HttpMethod.Type, Class> methodClassMap = entry.getValue();
         String httpMethod = req.getMethod();
         boolean head;
@@ -95,7 +96,7 @@ public class MustacheletService extends HttpServlet implements Filter {
           httpMethod = "GET";
         } else head = false;
         HttpMethod.Type type = HttpMethod.Type.valueOf(httpMethod);
-        requestPusher.bindInstance(RequestB.HTTP_METHOD, type);
+        requestPusher.bindInstance(Request.B.HTTP_METHOD, type);
         Class mustachelet = methodClassMap.get(type);
         Object o = mustacheletPusher.create(mustachelet);
         requestPusher.push(o);

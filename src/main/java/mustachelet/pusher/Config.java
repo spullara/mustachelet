@@ -14,6 +14,12 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ConfigP {
-  ConfigB value();
+public @interface Config {
+  B value();
+
+  public enum B {
+    MUSTACHELETS, // List<Class>, List of mustachelet classes
+    MUSTACHE_ROOT, // MustacheCompiler root, For compiling templates
+    PUSHER, // Pusher, Global pusher from the client
+  }
 }

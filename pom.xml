@@ -4,7 +4,7 @@
 
   <groupId>mustachelet</groupId>
   <artifactId>mustachelet</artifactId>
-  <version>1.0</version>
+  <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>mustachelet</name>

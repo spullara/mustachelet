@@ -4,13 +4,16 @@ import mustachelet.annotations.Controller;
 import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
-import mustachelet.pusher.RequestB;
-import mustachelet.pusher.RequestP;
+import mustachelet.pusher.Request;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.regex.Matcher;
+
+import static mustachelet.pusher.Request.B.MATCHER;
+import static mustachelet.pusher.Request.B.REQUEST;
+import static mustachelet.pusher.Request.B.RESPONSE;
 
 /**
  * Post / redirect handling
@@ -23,10 +26,10 @@ import java.util.regex.Matcher;
 @Template("post.html")
 @HttpMethod({HttpMethod.Type.GET, HttpMethod.Type.POST})
 public class Post {
-  @RequestP(RequestB.RESPONSE)
+  @Request(RESPONSE)
   HttpServletResponse response;
 
-  @RequestP(RequestB.REQUEST)
+  @Request(REQUEST)
   HttpServletRequest request;
 
   @Controller(HttpMethod.Type.POST)
@@ -35,7 +38,7 @@ public class Post {
     return false;
   }
 
-  @RequestP(RequestB.MATCHER)
+  @Request(MATCHER)
   Matcher m;
 
   String value() {
