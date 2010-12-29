@@ -3,19 +3,6 @@ you can do it quite easily. Here is an example:
 
 Backing code (Index.java):
 
-package mustachelets;
-
-import mustachelet.annotations.Controller;
-import mustachelet.annotations.Path;
-import mustachelet.annotations.Template;
-
-/**
- * Index page.
- * <p/>
- * User: sam
- * Date: 12/21/10
- * Time: 2:22 PM
- */
 @Path("/")
 @Template("index.html")
 public class Index {
@@ -41,35 +28,14 @@ Hello, {{name}}!
 
 The POST use case is a little more involved. Here is the post mustachelet:
 
-package mustachelets;
-
-import mustachelet.annotations.Controller;
-import mustachelet.annotations.HttpMethod;
-import mustachelet.annotations.Path;
-import mustachelet.annotations.Template;
-import mustachelet.pusher.RequestB;
-import mustachelet.pusher.Request;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.regex.Matcher;
-
-/**
- * Post / redirect handling
- * <p/>
- * User: sam
- * Date: 12/21/10
- * Time: 3:49 PM
- */
 @Path("/post(/(.*))?")
 @Template("post.html")
 @HttpMethod({HttpMethod.Type.GET, HttpMethod.Type.POST})
 public class Post {
-  @RequestP(RequestB.RESPONSE)
+  @Request(RESPONSE)
   HttpServletResponse response;
 
-  @RequestP(RequestB.REQUEST)
+  @Request(REQUEST)
   HttpServletRequest request;
 
   @Controller(HttpMethod.Type.POST)
@@ -78,7 +44,7 @@ public class Post {
     return false;
   }
 
-  @RequestP(RequestB.MATCHER)
+  @Request(MATCHER)
   Matcher m;
 
   String value() {
