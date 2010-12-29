@@ -30,7 +30,7 @@ The POST use case is a little more involved. Here is the post mustachelet:
 
 @Path("/post(/(.*))?")
 @Template("post.html")
-@HttpMethod({HttpMethod.Type.GET, HttpMethod.Type.POST})
+@HttpMethod({GET, POST})
 public class Post {
   @Request(RESPONSE)
   HttpServletResponse response;
@@ -38,7 +38,7 @@ public class Post {
   @Request(REQUEST)
   HttpServletRequest request;
 
-  @Controller(HttpMethod.Type.POST)
+  @Controller(POST)
   boolean post() throws IOException {
     response.sendRedirect("/post/" + request.getParameter("value"));
     return false;

@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.regex.Matcher;
 
+import static mustachelet.annotations.HttpMethod.Type.*;
 import static mustachelet.pusher.Request.B.MATCHER;
 import static mustachelet.pusher.Request.B.REQUEST;
 import static mustachelet.pusher.Request.B.RESPONSE;
@@ -24,7 +25,7 @@ import static mustachelet.pusher.Request.B.RESPONSE;
  */
 @Path("/post(/(.*))?")
 @Template("post.html")
-@HttpMethod({HttpMethod.Type.GET, HttpMethod.Type.POST})
+@HttpMethod({GET, POST})
 public class Post {
   @Request(RESPONSE)
   HttpServletResponse response;
@@ -32,7 +33,7 @@ public class Post {
   @Request(REQUEST)
   HttpServletRequest request;
 
-  @Controller(HttpMethod.Type.POST)
+  @Controller(POST)
   boolean post() throws IOException {
     response.sendRedirect("/post/" + request.getParameter("value"));
     return false;
