@@ -15,9 +15,9 @@ import thepusher.PusherBase;
 
 import java.io.File;
 
-import static mustachelet.pusher.Config.B.MUSTACHELETS;
-import static mustachelet.pusher.Config.B.MUSTACHE_ROOT;
-import static mustachelet.pusher.Config.B.PUSHER;
+import static mustachelet.pusher.Config.Bind.MUSTACHELETS;
+import static mustachelet.pusher.Config.Bind.MUSTACHE_ROOT;
+import static mustachelet.pusher.Config.Bind.PUSHER;
 
 /**
  * Simple Jetty Test Server
@@ -34,7 +34,7 @@ public class MustacheletTestServer {
     final ContextHandlerCollection contexts = new ContextHandlerCollection();
     server.setHandler(contexts);
 
-    Pusher<Config.B> pusher = PusherBase.create(Config.B.class, Config.class);
+    Pusher<Config.Bind> pusher = PusherBase.create(Config.Bind.class, Config.class);
     File root = new File("src/test/resources");
     pusher.bindInstance(MUSTACHELETS, Lists.newArrayList(Index.class, Post.class));
     pusher.bindInstance(MUSTACHE_ROOT, root);

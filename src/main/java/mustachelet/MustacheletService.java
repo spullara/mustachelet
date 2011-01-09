@@ -31,11 +31,13 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static mustachelet.pusher.Config.B.*;
-import static mustachelet.pusher.Request.B.*;
+import static mustachelet.pusher.Config.Bind.*;
+import static mustachelet.pusher.Request.Bind.REQUEST;
+import static mustachelet.pusher.Request.Bind.RESPONSE;
 
 /**
  * This servlet handles serving Mustachelets.
@@ -45,6 +47,9 @@ import static mustachelet.pusher.Request.B.*;
  * Time: 2:13 PM
  */
 public class MustacheletService extends HttpServlet implements Filter {
+
+  @Config(LOGGER)
+  Logger logger;
 
   @Config(PUSHER)
   Pusher mustacheletPusher;
@@ -76,7 +81,7 @@ public class MustacheletService extends HttpServlet implements Filter {
     resp.setHeader("Server", "Mustachelet/0.1");
     resp.setContentType("text/html");
     resp.setCharacterEncoding("UTF-8");
-    Pusher<Request.B> requestPusher = PusherBase.create(Request.B.class, Request.class);
+    Pusher<Request.Bind> requestPusher = PusherBase.create(Request.Bind.class, Request.class);
     requestPusher.bindInstance(REQUEST, req);
     requestPusher.bindInstance(RESPONSE, resp);
 
@@ -87,7 +92,7 @@ public class MustacheletService extends HttpServlet implements Filter {
     for (Map.Entry<Pattern, Map<HttpMethod.Type, Class>> entry : pathMap.entrySet()) {
       Matcher matcher = entry.getKey().matcher(requestURI);
       if (matcher.matches()) {
-        requestPusher.bindInstance(Request.B.MATCHER, matcher);
+        requestPusher.bindInstance(Request.Bind.MATCHER, matcher);
         Map<HttpMethod.Type, Class> methodClassMap = entry.getValue();
         String httpMethod = req.getMethod();
         boolean head;
@@ -96,7 +101,7 @@ public class MustacheletService extends HttpServlet implements Filter {
           httpMethod = "GET";
         } else head = false;
         HttpMethod.Type type = HttpMethod.Type.valueOf(httpMethod);
-        requestPusher.bindInstance(Request.B.HTTP_METHOD, type);
+        requestPusher.bindInstance(Request.Bind.HTTP_METHOD, type);
         Class mustachelet = methodClassMap.get(type);
         Object o = mustacheletPusher.create(mustachelet);
         requestPusher.push(o);
