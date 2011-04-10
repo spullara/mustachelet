@@ -2,9 +2,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>mustachelet</groupId>
+  <groupId>com.github.spullara.mustachelet</groupId>
   <artifactId>mustachelet</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>mustachelet</name>
@@ -17,9 +17,9 @@
   <dependencies>
     <!-- Mustache -->
     <dependency>
-      <groupId>mustache.java</groupId>
+      <groupId>com.github.spullara.mustache.java</groupId>
       <artifactId>compiler</artifactId>
-      <version>0.2-SNAPSHOT</version>
+      <version>0.3-SNAPSHOT</version>
       <exclusions>
         <exclusion>
           <groupId>org.eclipse.jetty</groupId>
@@ -58,4 +58,18 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+    
 </project>
