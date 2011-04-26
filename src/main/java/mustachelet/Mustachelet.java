@@ -27,8 +27,6 @@ public abstract class Mustachelet extends Mustache {
     synchronized (name.intern()) {
       m = cache.get(name);
       if (m == null) {
-        String parentDir = new File(getPath()).getParent();
-        String filename = (parentDir == null ? "" : parentDir + "/") + name + ".html";
         MustacheCompiler c = new MustacheCompiler(getRoot());
         c.setSuperclass(Mustachelet.class.getName());
         Trace.Event event = null;
@@ -37,7 +35,7 @@ public abstract class Mustachelet extends Mustache {
           String traceName = parent == null ? s.getClass().getName() : parent.getClass().getName();
           event = Trace.addEvent("partial compile: " + name, traceName);
         }
-        m = c.parseFile(filename);
+        m = c.parseFile(name + ".html");
         cache.put(name, m);
         if (trace) {
           event.end();
