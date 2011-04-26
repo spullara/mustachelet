@@ -2,7 +2,7 @@ package mustachelet;
 
 import com.google.common.collect.Lists;
 import mustachelet.pusher.Config;
-import mustachelet.pusher.PTest;
+import mustachelet.pusher.PEnum;
 import mustachelet.pusher.TestPush;
 import mustachelets.Index;
 import mustachelets.Post;
@@ -38,7 +38,7 @@ public class MustacheletTestServer {
     File root = new File("src/test/resources");
     pusher.bindInstance(MUSTACHELETS, Lists.newArrayList(Index.class, Post.class));
     pusher.bindInstance(MUSTACHE_ROOT, root);
-    pusher.bindInstance(PUSHER, PusherBase.create(PTest.class, TestPush.class));
+    pusher.bindInstance(PUSHER, PusherBase.create(PEnum.class, TestPush.class));
 
     final ServletContextHandler mainHandler = new ServletContextHandler(contexts, "/", true, false);
     mainHandler.addServlet(new ServletHolder(pusher.create(MustacheletService.class)), "/");
