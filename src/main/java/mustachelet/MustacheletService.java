@@ -149,6 +149,7 @@ public class MustacheletService extends HttpServlet implements Filter {
 
   public void init() throws ServletException {
     MustacheCompiler mc = new MustacheCompiler(root);
+    mc.setSuperclass("mustachelet.Mustachelet");
     for (Class<?> mustachelet : mustachelets) {
       Path annotation = mustachelet.getAnnotation(Path.class);
       if (annotation == null) {
