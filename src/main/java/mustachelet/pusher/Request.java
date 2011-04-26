@@ -15,9 +15,9 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Request {
-  B value();
+  Bind value();
 
-  public enum B {
+  public enum Bind {
     REQUEST, // HttpServletRequest
     RESPONSE, // HttpServletResponse
     MATCHER, // Matcher

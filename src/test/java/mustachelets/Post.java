@@ -12,9 +12,9 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 
 import static mustachelet.annotations.HttpMethod.Type.*;
-import static mustachelet.pusher.Request.B.MATCHER;
-import static mustachelet.pusher.Request.B.REQUEST;
-import static mustachelet.pusher.Request.B.RESPONSE;
+import static mustachelet.pusher.Request.Bind.MATCHER;
+import static mustachelet.pusher.Request.Bind.REQUEST;
+import static mustachelet.pusher.Request.Bind.RESPONSE;
 
 /**
  * Post / redirect handling

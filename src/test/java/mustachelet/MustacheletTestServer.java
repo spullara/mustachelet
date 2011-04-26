@@ -2,7 +2,7 @@ package mustachelet;
 
 import com.google.common.collect.Lists;
 import mustachelet.pusher.Config;
-import mustachelet.pusher.PTest;
+import mustachelet.pusher.PEnum;
 import mustachelet.pusher.TestPush;
 import mustachelets.Index;
 import mustachelets.Post;
@@ -15,9 +15,9 @@ import thepusher.PusherBase;
 
 import java.io.File;
 
-import static mustachelet.pusher.Config.B.MUSTACHELETS;
-import static mustachelet.pusher.Config.B.MUSTACHE_ROOT;
-import static mustachelet.pusher.Config.B.PUSHER;
+import static mustachelet.pusher.Config.Bind.MUSTACHELETS;
+import static mustachelet.pusher.Config.Bind.MUSTACHE_ROOT;
+import static mustachelet.pusher.Config.Bind.PUSHER;
 
 /**
  * Simple Jetty Test Server
@@ -34,11 +34,11 @@ public class MustacheletTestServer {
     final ContextHandlerCollection contexts = new ContextHandlerCollection();
     server.setHandler(contexts);
 
-    Pusher<Config.B> pusher = PusherBase.create(Config.B.class, Config.class);
+    Pusher<Config.Bind> pusher = PusherBase.create(Config.Bind.class, Config.class);
     File root = new File("src/test/resources");
     pusher.bindInstance(MUSTACHELETS, Lists.newArrayList(Index.class, Post.class));
     pusher.bindInstance(MUSTACHE_ROOT, root);
-    pusher.bindInstance(PUSHER, PusherBase.create(PTest.class, TestPush.class));
+    pusher.bindInstance(PUSHER, PusherBase.create(PEnum.class, TestPush.class));
 
     final ServletContextHandler mainHandler = new ServletContextHandler(contexts, "/", true, false);
     mainHandler.addServlet(new ServletHolder(pusher.create(MustacheletService.class)), "/");
