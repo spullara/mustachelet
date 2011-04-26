@@ -104,39 +104,43 @@ public class MustacheletService extends HttpServlet implements Filter {
         requestPusher.bindInstance(Request.Bind.HTTP_METHOD, type);
         Class mustachelet = methodClassMap.get(type);
         Object o = mustacheletPusher.create(mustachelet);
-        requestPusher.push(o);
-        Map<HttpMethod.Type, Method> typeMethodMap = controllerMap.get(mustachelet);
-        if (typeMethodMap != null) {
-          Method method = typeMethodMap.get(type);
-          if (method != null) {
-            Object invoke;
-            try {
-              invoke = method.invoke(o);
-              if (invoke instanceof Boolean && !((Boolean)invoke)) {
+        if (o != null) {
+          requestPusher.push(o);
+          Map<HttpMethod.Type, Method> typeMethodMap = controllerMap.get(mustachelet);
+          if (typeMethodMap != null) {
+            Method method = typeMethodMap.get(type);
+            if (method != null) {
+              Object invoke;
+              try {
+                invoke = method.invoke(o);
+                if (invoke instanceof Boolean && !((Boolean)invoke)) {
+                  return true;
+                }
+              } catch (Exception e) {
+                e.printStackTrace();
+                resp.setStatus(500);
                 return true;
               }
-            } catch (Exception e) {
-              e.printStackTrace();
-              resp.setStatus(500);
-              return true;
             }
           }
-        }
-        if (head) {
-          resp.setStatus(200);
-          return true;
-        }
-        Mustache mustache = mustacheMap.get(mustachelet);
-        FutureWriter fw = new FutureWriter(resp.getWriter());
-        try {
-          mustache.execute(fw, new Scope(o));
-          resp.setStatus(200);
-          fw.flush();
-          return true;
-        } catch (MustacheException e) {
-          resp.setStatus(500);
-          e.printStackTrace();
-          return true;
+          if (head) {
+            resp.setStatus(200);
+            return true;
+          }
+          Mustache mustache = mustacheMap.get(mustachelet);
+          FutureWriter fw = new FutureWriter(resp.getWriter());
+          try {
+            mustache.execute(fw, new Scope(o));
+            resp.setStatus(200);
+            fw.flush();
+            return true;
+          } catch (MustacheException e) {
+            resp.setStatus(500);
+            e.printStackTrace();
+            return true;
+          }
+        } else {
+          resp.setStatus(405);
         }
       }
     }
@@ -195,7 +199,6 @@ public class MustacheletService extends HttpServlet implements Filter {
           for (HttpMethod.Type type : controller.value()) {
             typeMethodMap.put(type, method);
           }
-          break;
         }
       }
     }
