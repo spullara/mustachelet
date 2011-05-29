@@ -1,7 +1,7 @@
 package mustachelet;
 
 import com.sampullara.mustache.Mustache;
-import com.sampullara.mustache.MustacheCompiler;
+import com.sampullara.mustache.MustacheBuilder;
 import com.sampullara.mustache.MustacheException;
 import com.sampullara.mustache.Scope;
 import com.sampullara.util.FutureWriter;
@@ -23,9 +23,7 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -35,7 +33,10 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static mustachelet.pusher.Config.Bind.*;
+import static mustachelet.pusher.Config.Bind.LOGGER;
+import static mustachelet.pusher.Config.Bind.MUSTACHELETS;
+import static mustachelet.pusher.Config.Bind.MUSTACHE_ROOT;
+import static mustachelet.pusher.Config.Bind.PUSHER;
 import static mustachelet.pusher.Request.Bind.REQUEST;
 import static mustachelet.pusher.Request.Bind.RESPONSE;
 
@@ -152,8 +153,7 @@ public class MustacheletService extends HttpServlet implements Filter {
   }
 
   public void init() throws ServletException {
-    MustacheCompiler mc = new MustacheCompiler(root);
-    mc.setSuperclass("mustachelet.Mustachelet");
+    MustacheBuilder mc = new MustacheBuilder(root);
     for (Class<?> mustachelet : mustachelets) {
       Path annotation = mustachelet.getAnnotation(Path.class);
       if (annotation == null) {
@@ -182,7 +182,7 @@ public class MustacheletService extends HttpServlet implements Filter {
         if (!file.exists()) {
           throw new ServletException("Template file does not exist: " + file);
         }
-        Mustache mustache = mc.compile(new BufferedReader(new FileReader(file)));
+        Mustache mustache = mc.parseFile(template.value());
         mustacheMap.put(mustachelet, mustache);
       } catch (Exception e) {
         throw new ServletException("Failed to compile template: " + template.value(), e);

@@ -32,14 +32,8 @@
     <!-- Mustache -->
     <dependency>
       <groupId>com.github.spullara.mustache.java</groupId>
-      <artifactId>compiler</artifactId>
-      <version>0.4-SNAPSHOT</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-client</artifactId>
-        </exclusion>
-      </exclusions>
+      <artifactId>builder</artifactId>
+      <version>0.5-SNAPSHOT</version>
     </dependency>
 
     <!-- The Pusher -->
