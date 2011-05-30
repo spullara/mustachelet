@@ -1,23 +1,21 @@
 package mustachelet;
 
 import com.google.common.collect.Lists;
-import mustachelet.pusher.Config;
-import mustachelet.pusher.PEnum;
-import mustachelet.pusher.TestPush;
+import com.google.inject.Binder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import mustachelets.Index;
 import mustachelets.Post;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import thepusher.Pusher;
-import thepusher.PusherBase;
 
 import java.io.File;
-
-import static mustachelet.pusher.Config.Bind.MUSTACHELETS;
-import static mustachelet.pusher.Config.Bind.MUSTACHE_ROOT;
-import static mustachelet.pusher.Config.Bind.PUSHER;
+import java.util.List;
 
 /**
  * Simple Jetty Test Server
@@ -28,20 +26,23 @@ import static mustachelet.pusher.Config.Bind.PUSHER;
  */
 public class MustacheletTestServer {
   public static void main(String[] args) throws Exception {
-    Server server = new Server(9000);
+    Server server = new Server(9090);
     server.setGracefulShutdown(1000);
 
     final ContextHandlerCollection contexts = new ContextHandlerCollection();
     server.setHandler(contexts);
 
-    Pusher<Config.Bind> pusher = PusherBase.create(Config.Bind.class, Config.class);
-    File root = new File("src/test/resources");
-    pusher.bindInstance(MUSTACHELETS, Lists.newArrayList(Index.class, Post.class));
-    pusher.bindInstance(MUSTACHE_ROOT, root);
-    pusher.bindInstance(PUSHER, PusherBase.create(PEnum.class, TestPush.class));
+    Injector injector = Guice.createInjector(new Module() {
+      @Override
+      public void configure(Binder binder) {
+        binder.bind(new TypeLiteral<List<Class<?>>>() {
+        }).toInstance(Lists.newArrayList(Index.class, Post.class));
+        binder.bind(File.class).annotatedWith(Names.named("root")).toInstance(new File("src/test/resources"));
+      }
+    });
 
     final ServletContextHandler mainHandler = new ServletContextHandler(contexts, "/", true, false);
-    mainHandler.addServlet(new ServletHolder(pusher.create(MustacheletService.class)), "/");
+    mainHandler.addServlet(new ServletHolder(injector.getInstance(MustacheletService.class)), "/");
     server.start();
   }
 }

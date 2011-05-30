@@ -1,10 +1,10 @@
 package mustachelets;
 
+import com.google.inject.Inject;
 import mustachelet.annotations.Controller;
 import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
-import mustachelet.pusher.Request;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,9 +12,6 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 
 import static mustachelet.annotations.HttpMethod.Type.*;
-import static mustachelet.pusher.Request.Bind.MATCHER;
-import static mustachelet.pusher.Request.Bind.REQUEST;
-import static mustachelet.pusher.Request.Bind.RESPONSE;
 
 /**
  * Post / redirect handling
@@ -27,10 +24,10 @@ import static mustachelet.pusher.Request.Bind.RESPONSE;
 @Template("post.html")
 @HttpMethod({GET, POST})
 public class Post {
-  @Request(RESPONSE)
+  @Inject
   HttpServletResponse response;
 
-  @Request(REQUEST)
+  @Inject
   HttpServletRequest request;
 
   @Controller(POST)
@@ -39,7 +36,7 @@ public class Post {
     return false;
   }
 
-  @Request(MATCHER)
+  @Inject
   Matcher m;
 
   String value() {
