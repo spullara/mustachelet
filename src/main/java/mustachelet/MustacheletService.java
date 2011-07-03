@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.internal.Nullable;
 import com.google.inject.name.Named;
 import com.sampullara.mustache.Mustache;
 import com.sampullara.mustache.MustacheBuilder;
@@ -51,6 +52,7 @@ public class MustacheletService extends HttpServlet implements Filter {
   List<Class<?>> mustachelets;
 
   @Inject
+  @Nullable
   @Named("root")
   File root;
 
@@ -65,6 +67,11 @@ public class MustacheletService extends HttpServlet implements Filter {
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
     if (execute(resp, req)) return;
     resp.sendError(404, "Not found");
+  }
+
+  @Override
+  public void init(FilterConfig filterConfig) throws ServletException {
+    init();
   }
 
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -147,10 +154,6 @@ public class MustacheletService extends HttpServlet implements Filter {
     return false;
   }
 
-  public void init(FilterConfig filterConfig) throws ServletException {
-    init();
-  }
-
   public void init() throws ServletException {
     String moduleClass = getInitParameter("module");
     if (moduleClass != null) {
@@ -159,6 +162,10 @@ public class MustacheletService extends HttpServlet implements Filter {
       } catch (Exception e) {
         throw new ServletException("Failed to initialize", e);
       }
+    }
+    if (root == null) {
+      String realPath = getServletContext().getRealPath("/");
+      root = new File(realPath);
     }
     MustacheBuilder mc = new MustacheBuilder(root);
     for (Class<?> mustachelet : mustachelets) {
@@ -187,7 +194,7 @@ public class MustacheletService extends HttpServlet implements Filter {
       try {
         File file = new File(root, template.value());
         if (!file.exists()) {
-          throw new ServletException("Template file does not exist: " + file.getCanonicalPath());
+          throw new ServletException("Template file does not exist: " + file.getAbsolutePath());
         }
         Mustache mustache = mc.parseFile(template.value());
         mustacheMap.put(mustachelet, mustache);
