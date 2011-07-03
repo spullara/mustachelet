@@ -22,7 +22,7 @@ import static mustachelet.annotations.HttpMethod.Type.*;
  */
 @Path("/post(/(.*))?")
 @Template("post.html")
-@HttpMethod({GET, POST})
+@HttpMethod({GET, HEAD, POST})
 public class Post {
   @Inject
   HttpServletResponse response;

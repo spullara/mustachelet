@@ -1,6 +1,7 @@
 package mustachelet;
 
 import com.google.inject.Binder;
+import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -151,6 +152,14 @@ public class MustacheletService extends HttpServlet implements Filter {
   }
 
   public void init() throws ServletException {
+    String moduleClass = getInitParameter("module");
+    if (moduleClass != null) {
+      try {
+        Guice.createInjector((Module) Class.forName(moduleClass).newInstance()).injectMembers(this);
+      } catch (Exception e) {
+        throw new ServletException("Failed to initialize", e);
+      }
+    }
     MustacheBuilder mc = new MustacheBuilder(root);
     for (Class<?> mustachelet : mustachelets) {
       Path annotation = mustachelet.getAnnotation(Path.class);
@@ -178,7 +187,7 @@ public class MustacheletService extends HttpServlet implements Filter {
       try {
         File file = new File(root, template.value());
         if (!file.exists()) {
-          throw new ServletException("Template file does not exist: " + file);
+          throw new ServletException("Template file does not exist: " + file.getCanonicalPath());
         }
         Mustache mustache = mc.parseFile(template.value());
         mustacheMap.put(mustachelet, mustache);

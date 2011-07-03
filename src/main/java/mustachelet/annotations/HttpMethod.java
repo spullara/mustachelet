@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface HttpMethod {
   enum Type {
-    GET, POST
+    GET, POST, HEAD
   }
   Type[] value() default Type.GET;
 }
