@@ -20,6 +20,8 @@ import mustachelet.annotations.Template;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
@@ -62,6 +64,7 @@ public class MustacheletService extends HttpServlet implements Filter {
   private Map<Pattern, Map<HttpMethod.Type, Class>> pathMap = new HashMap<Pattern, Map<HttpMethod.Type, Class>>();
   private Map<Class, Mustache> mustacheMap = new HashMap<Class, Mustache>();
   private Map<Class, Map<HttpMethod.Type, Method>> controllerMap = new HashMap<Class, Map<HttpMethod.Type, Method>>();
+  private FilterConfig filterConfig;
 
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -71,7 +74,13 @@ public class MustacheletService extends HttpServlet implements Filter {
 
   @Override
   public void init(FilterConfig filterConfig) throws ServletException {
+    this.filterConfig = filterConfig;
     init();
+  }
+
+  @Override
+  public void init(ServletConfig config) throws ServletException {
+    super.init(config);
   }
 
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -155,7 +164,12 @@ public class MustacheletService extends HttpServlet implements Filter {
   }
 
   public void init() throws ServletException {
-    String moduleClass = getInitParameter("module");
+    String moduleClass;
+    if (filterConfig != null) {
+      moduleClass = filterConfig.getInitParameter("module");
+    } else {
+      moduleClass = getInitParameter("module");
+    }
     if (moduleClass != null) {
       try {
         Guice.createInjector((Module) Class.forName(moduleClass).newInstance()).injectMembers(this);
@@ -164,7 +178,13 @@ public class MustacheletService extends HttpServlet implements Filter {
       }
     }
     if (root == null) {
-      String realPath = getServletContext().getRealPath("/");
+      ServletContext servletContext;
+      if (filterConfig != null) {
+        servletContext = filterConfig.getServletContext();
+      } else {
+        servletContext = getServletContext();
+      }
+      String realPath = servletContext.getRealPath("/");
       root = new File(realPath);
     }
     MustacheBuilder mc = new MustacheBuilder(root);
