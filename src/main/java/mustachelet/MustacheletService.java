@@ -104,7 +104,7 @@ public class MustacheletService extends HttpServlet implements Filter {
       if (matcher.matches()) {
         Map<HttpMethod.Type, Class> methodClassMap = entry.getValue();
         String httpMethod = req.getMethod();
-        boolean head;
+        final boolean head;
         if (httpMethod.equals("HEAD")) {
           head = true;
           httpMethod = "GET";

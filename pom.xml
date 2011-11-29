@@ -33,7 +33,7 @@
     <dependency>
       <groupId>com.github.spullara.mustache.java</groupId>
       <artifactId>builder</artifactId>
-      <version>0.5-SNAPSHOT</version>
+      <version>[0.6,]</version>
     </dependency>
 
     <!-- The Pusher -->
