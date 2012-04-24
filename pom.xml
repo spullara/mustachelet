@@ -60,8 +60,8 @@
     <!-- Mustache -->
     <dependency>
       <groupId>com.github.spullara.mustache.java</groupId>
-      <artifactId>builder</artifactId>
-      <version>[0.6,)</version>
+      <artifactId>compiler</artifactId>
+      <version>0.7.5</version>
     </dependency>
 
     <!-- The Pusher -->

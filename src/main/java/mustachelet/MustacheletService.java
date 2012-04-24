@@ -1,22 +1,16 @@
 package mustachelet;
 
-import com.google.inject.Binder;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.internal.Nullable;
-import com.google.inject.name.Named;
-import com.sampullara.mustache.Mustache;
-import com.sampullara.mustache.MustacheBuilder;
-import com.sampullara.mustache.MustacheException;
-import com.sampullara.mustache.Scope;
-import com.sampullara.util.FutureWriter;
-import mustachelet.annotations.Controller;
-import mustachelet.annotations.HttpMethod;
-import mustachelet.annotations.Path;
-import mustachelet.annotations.Template;
-
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -28,15 +22,23 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import com.google.inject.Binder;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.internal.Nullable;
+import com.google.inject.name.Named;
+
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheException;
+import com.github.mustachejava.MustacheFactory;
+import mustachelet.annotations.Controller;
+import mustachelet.annotations.HttpMethod;
+import mustachelet.annotations.Path;
+import mustachelet.annotations.Template;
 
 /**
  * This servlet handles serving Mustachelets.
@@ -129,7 +131,7 @@ public class MustacheletService extends HttpServlet implements Filter {
               Object invoke;
               try {
                 invoke = method.invoke(o);
-                if (invoke instanceof Boolean && !((Boolean)invoke)) {
+                if (invoke instanceof Boolean && !((Boolean) invoke)) {
                   return true;
                 }
               } catch (Exception e) {
@@ -144,11 +146,11 @@ public class MustacheletService extends HttpServlet implements Filter {
             return true;
           }
           Mustache mustache = mustacheMap.get(mustachelet);
-          FutureWriter fw = new FutureWriter(resp.getWriter());
           try {
-            mustache.execute(fw, new Scope(o));
+            Writer writer = resp.getWriter();
+            writer = mustache.execute(writer, o);
             resp.setStatus(200);
-            fw.flush();
+            writer.close();
             return true;
           } catch (MustacheException e) {
             resp.setStatus(500);
@@ -187,15 +189,17 @@ public class MustacheletService extends HttpServlet implements Filter {
       String realPath = servletContext.getRealPath("/");
       root = new File(realPath);
     }
-    MustacheBuilder mc = new MustacheBuilder(root);
+    MustacheFactory mc = new DefaultMustacheFactory(root);
     for (Class<?> mustachelet : mustachelets) {
       Path annotation = mustachelet.getAnnotation(Path.class);
       if (annotation == null) {
-        throw new ServletException("No Path annotation present on: " + mustachelet.getCanonicalName());
+        throw new ServletException(
+                "No Path annotation present on: " + mustachelet.getCanonicalName());
       }
       Template template = mustachelet.getAnnotation(Template.class);
       if (template == null) {
-        throw new ServletException("You must specify a template on: " + mustachelet.getCanonicalName());
+        throw new ServletException(
+                "You must specify a template on: " + mustachelet.getCanonicalName());
       }
       HttpMethod httpMethod = mustachelet.getAnnotation(HttpMethod.class);
       String regex = annotation.value();
@@ -216,7 +220,7 @@ public class MustacheletService extends HttpServlet implements Filter {
         if (!file.exists()) {
           throw new ServletException("Template file does not exist: " + file.getAbsolutePath());
         }
-        Mustache mustache = mc.parseFile(template.value());
+        Mustache mustache = mc.compile(template.value());
         mustacheMap.put(mustachelet, mustache);
       } catch (Exception e) {
         throw new ServletException("Failed to compile template: " + template.value(), e);
