@@ -1,36 +1,26 @@
 package mustachelet;
 
-import com.google.inject.Binder;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Module;
+import com.github.mustachejava.DefaultMustacheFactory;
+import com.github.mustachejava.Mustache;
+import com.github.mustachejava.MustacheException;
+import com.github.mustachejava.MustacheFactory;
+import com.google.inject.*;
 import com.google.inject.internal.Nullable;
 import com.google.inject.name.Named;
-import com.sampullara.mustache.Mustache;
-import com.sampullara.mustache.MustacheBuilder;
-import com.sampullara.mustache.MustacheException;
-import com.sampullara.mustache.Scope;
-import com.sampullara.util.FutureWriter;
 import mustachelet.annotations.Controller;
 import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.io.Writer;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +80,14 @@ public class MustacheletService extends HttpServlet implements Filter {
     chain.doFilter(request, response);
   }
 
+  public static void bind(ServletRequest request, Module module) {
+    Object modules = request.getAttribute("modules");
+    if (!(modules instanceof List)) {
+      request.setAttribute("modules", modules = new ArrayList<Module>());
+    }
+    ((List<Module>)modules).add(module);
+  }
+
   private boolean execute(final HttpServletResponse resp, final HttpServletRequest req) throws IOException {
     resp.setHeader("Server", "Mustachelet/0.1");
     resp.setContentType("text/html");
@@ -117,6 +115,12 @@ public class MustacheletService extends HttpServlet implements Filter {
             binder.bind(Matcher.class).toInstance(matcher);
             binder.bind(HttpServletRequest.class).toInstance(req);
             binder.bind(HttpServletResponse.class).toInstance(resp);
+            Object modules = req.getAttribute("modules");
+            if (modules instanceof List) {
+              for (Module module : (List<Module>) modules) {
+                module.configure(binder);
+              }
+            }
           }
         });
 
@@ -144,11 +148,10 @@ public class MustacheletService extends HttpServlet implements Filter {
             return true;
           }
           Mustache mustache = mustacheMap.get(mustachelet);
-          FutureWriter fw = new FutureWriter(resp.getWriter());
           try {
-            mustache.execute(fw, new Scope(o));
+            Writer execute = mustache.execute(resp.getWriter(), o);
             resp.setStatus(200);
-            fw.flush();
+            execute.flush();
             return true;
           } catch (MustacheException e) {
             resp.setStatus(500);
@@ -187,7 +190,7 @@ public class MustacheletService extends HttpServlet implements Filter {
       String realPath = servletContext.getRealPath("/");
       root = new File(realPath);
     }
-    MustacheBuilder mc = new MustacheBuilder(root);
+    MustacheFactory mc = new DefaultMustacheFactory(root);
     for (Class<?> mustachelet : mustachelets) {
       Path annotation = mustachelet.getAnnotation(Path.class);
       if (annotation == null) {
@@ -216,7 +219,7 @@ public class MustacheletService extends HttpServlet implements Filter {
         if (!file.exists()) {
           throw new ServletException("Template file does not exist: " + file.getAbsolutePath());
         }
-        Mustache mustache = mc.parseFile(template.value());
+        Mustache mustache = mc.compile(template.value());
         mustacheMap.put(mustachelet, mustache);
       } catch (Exception e) {
         throw new ServletException("Failed to compile template: " + template.value(), e);

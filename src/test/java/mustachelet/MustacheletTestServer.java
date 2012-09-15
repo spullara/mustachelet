@@ -14,6 +14,7 @@ import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
+import javax.servlet.Servlet;
 import java.io.File;
 import java.util.List;
 
@@ -42,7 +43,7 @@ public class MustacheletTestServer {
     });
 
     final ServletContextHandler mainHandler = new ServletContextHandler(contexts, "/", true, false);
-    mainHandler.addServlet(new ServletHolder(injector.getInstance(MustacheletService.class)), "/");
+    mainHandler.addServlet(new ServletHolder((Servlet) injector.getInstance(MustacheletService.class)), "/");
     server.start();
   }
 }
