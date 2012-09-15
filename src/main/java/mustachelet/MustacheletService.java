@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 /**
  * This servlet handles serving Mustachelets.
  * <p/>
@@ -102,7 +103,7 @@ public class MustacheletService extends HttpServlet implements Filter {
       if (matcher.matches()) {
         Map<HttpMethod.Type, Class> methodClassMap = entry.getValue();
         String httpMethod = req.getMethod();
-        boolean head;
+        final boolean head;
         if (httpMethod.equals("HEAD")) {
           head = true;
           httpMethod = "GET";
@@ -133,7 +134,7 @@ public class MustacheletService extends HttpServlet implements Filter {
               Object invoke;
               try {
                 invoke = method.invoke(o);
-                if (invoke instanceof Boolean && !((Boolean)invoke)) {
+                if (invoke instanceof Boolean && !((Boolean) invoke)) {
                   return true;
                 }
               } catch (Exception e) {
@@ -194,11 +195,13 @@ public class MustacheletService extends HttpServlet implements Filter {
     for (Class<?> mustachelet : mustachelets) {
       Path annotation = mustachelet.getAnnotation(Path.class);
       if (annotation == null) {
-        throw new ServletException("No Path annotation present on: " + mustachelet.getCanonicalName());
+        throw new ServletException(
+                "No Path annotation present on: " + mustachelet.getCanonicalName());
       }
       Template template = mustachelet.getAnnotation(Template.class);
       if (template == null) {
-        throw new ServletException("You must specify a template on: " + mustachelet.getCanonicalName());
+        throw new ServletException(
+                "You must specify a template on: " + mustachelet.getCanonicalName());
       }
       HttpMethod httpMethod = mustachelet.getAnnotation(HttpMethod.class);
       String regex = annotation.value();

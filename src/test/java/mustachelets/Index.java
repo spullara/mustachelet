@@ -1,8 +1,12 @@
 package mustachelets;
 
 import mustachelet.annotations.Controller;
+import mustachelet.annotations.HttpMethod;
 import mustachelet.annotations.Path;
 import mustachelet.annotations.Template;
+
+import static mustachelet.annotations.HttpMethod.*;
+import static mustachelet.annotations.HttpMethod.Type.*;
 
 /**
  * Index page.
