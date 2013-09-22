@@ -50,6 +50,11 @@ public class MustacheletService extends HttpServlet implements Filter {
   File root;
 
   @Inject
+  @Nullable
+  @Named("path")
+  String path;
+
+  @Inject
   Injector injector;
 
   private Map<Pattern, Map<HttpMethod.Type, Class>> pathMap = new HashMap<Pattern, Map<HttpMethod.Type, Class>>();
@@ -181,17 +186,13 @@ public class MustacheletService extends HttpServlet implements Filter {
         throw new ServletException("Failed to initialize", e);
       }
     }
+    MustacheFactory mc;
     if (root == null) {
-      ServletContext servletContext;
-      if (filterConfig != null) {
-        servletContext = filterConfig.getServletContext();
-      } else {
-        servletContext = getServletContext();
-      }
-      String realPath = servletContext.getRealPath("/");
-      root = new File(realPath);
+      mc = new DefaultMustacheFactory(path);
+
+    } else {
+      mc = new DefaultMustacheFactory(new File(root, path));
     }
-    MustacheFactory mc = new DefaultMustacheFactory(root);
     for (Class<?> mustachelet : mustachelets) {
       Path annotation = mustachelet.getAnnotation(Path.class);
       if (annotation == null) {
@@ -218,9 +219,15 @@ public class MustacheletService extends HttpServlet implements Filter {
         throw new ServletException("Duplicate path: " + mustachelet + " and " + put);
       }
       try {
-        File file = new File(root, template.value());
-        if (!file.exists()) {
-          throw new ServletException("Template file does not exist: " + file.getAbsolutePath());
+        if (root == null) {
+          if (getClass().getClassLoader().getResourceAsStream(path + "/" + template.value()) == null) {
+            throw new ServletException("Template file does not exist: " + path + "/" + template.value());
+          }
+        } else {
+          File file = new File(root, template.value());
+          if (!file.exists()) {
+            throw new ServletException("Template file does not exist: " + file.getAbsolutePath());
+          }
         }
         Mustache mustache = mc.compile(template.value());
         mustacheMap.put(mustachelet, mustache);
