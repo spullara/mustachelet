@@ -1,7 +1,11 @@
 package mustachelet;
 
 import com.google.common.collect.Lists;
-import com.google.inject.*;
+import com.google.inject.Binder;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import mustachelets.Index;
 import mustachelets.Post;
@@ -34,6 +38,7 @@ public class MustacheletTestServer {
         binder.bind(new TypeLiteral<List<Class<?>>>() {
         }).toInstance(Lists.newArrayList(Index.class, Post.class));
         binder.bind(File.class).annotatedWith(Names.named("root")).toInstance(new File("src/test/resources"));
+        binder.bind(String.class).annotatedWith(Names.named("path")).toInstance("");
       }
     });
 
